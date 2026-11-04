@@ -14,6 +14,12 @@
 4. [本地开发、测试和代码目录](docs/DEVELOPMENT.md)
 5. [常见问题](docs/TROUBLESHOOTING.md) · [数据与隐私](SECURITY.md) · [发行版验证范围](docs/VALIDATION.md)
 
+## 参考项目与致谢
+
+设备接入的重要基础来自 **[tacshi/Soundcore](https://github.com/tacshi/Soundcore)** 的公开协议研究。本项目参考了它的 [PROTOCOL.md](https://github.com/tacshi/Soundcore/blob/main/PROTOCOL.md) 和[实时取流实现 realtime_stream.dart](https://github.com/tacshi/Soundcore/blob/main/lib/ble/realtime_stream.dart)，涉及蓝牙服务与数据帧、设备信息、会话密钥与音频解密，以及实时读取录音的流程。感谢原作者对 D3200 协议的整理与验证。
+
+本项目在这些参考基础上完成飞书 H5 / JavaScript 与 Python 服务端的实现，接入 StepFun、豆包、本人登录、录音库和私人飞书文档，并补充设备协议核查、真机适配与测试。上游的协议研究贡献与本项目的实现、补充验证分别记录在[来源说明与代码对应表](THIRD_PARTY.md)中；第三方材料的许可独立于本项目的商业授权条款。
+
 ## 能做什么
 
 | 环节 | 当前实现 |
