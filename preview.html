@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>录音豆</title><link rel="stylesheet" href="ui-assets/app.css">
+</head>
+<body>
+<main class="app" id="app">
+  <section class="library" id="library-view">
+    <header class="top"><div class="seg" role="tablist" aria-label="录音豆"><button role="tab" data-tab="device">设备</button><button role="tab" data-tab="recordings">录音</button></div></header>
+
+    <section id="device-tab" role="tabpanel" aria-label="设备">
+      <div class="device-head">
+        <div class="device-art" aria-hidden="true"><svg viewBox="0 0 48 48" class="icon"><rect x="4.5" y="11" width="27" height="27" rx="7.5"/><circle cx="32" cy="24.5" r="11" style="fill:var(--surface)"/><path d="M28.5 21.5h7M28.5 27.5h7"/></svg></div>
+        <div style="flex:1;min-width:0"><div class="device-name">soundcore Work</div><div class="device-state"><span class="dot" id="device-dot"></span><span id="device-state"></span></div></div>
+        <button class="text-btn" id="disconnect" data-action="releaseDevice" hidden>断开</button>
+      </div>
+      <h2 class="label">电量</h2>
+      <div class="group">
+        <div class="row"><span class="row-label">录音豆</span><span class="meter" id="mic-meter"><i></i></span><span class="row-value num" id="mic-value"></span></div>
+        <div class="row"><span class="row-label">充电盒</span><span class="meter" id="case-meter"><i></i></span><span class="row-value num" id="case-value"></span></div>
+      </div>
+      <h2 class="label">存储</h2>
+      <div class="group"><div class="storage"><div class="storage-line num"><span id="storage-used"></span><span id="storage-total"></span></div><div class="track"><i id="storage-fill"></i></div></div>
+        <button class="row link-row" id="manage-files" data-action="openDeviceFiles"><span class="row-label">管理录音豆里的录音</span><svg viewBox="0 0 24 24" class="icon chev" aria-hidden="true"><path d="m9.5 5.5 6.5 6.5-6.5 6.5"/></svg></button></div>
+      <h2 class="label">识别模型</h2>
+      <div class="group">
+        <div class="row model-row"><span class="row-label">实时字幕</span><div class="seg" id="live-model-seg" aria-label="实时字幕模型"><button data-live-model="doubao">豆包</button><button data-live-model="stepfun">StepFun</button></div></div>
+        <div class="row model-row"><span class="row-label">录后识别</span><div class="seg" id="file-model-seg" aria-label="录后识别模型"><button data-file-model="stepfun">StepFun</button><button data-file-model="doubao">豆包</button></div></div>
+      </div>
+      <p class="note" id="model-note"></p>
+      <h2 class="label">原厂与固件</h2>
+      <div class="group">
+        <div class="row"><span class="row-label">原厂绑定</span><span class="row-value" id="bound-value"></span></div>
+        <div class="row"><span class="row-label">录音豆固件</span><span class="row-value num" id="fw-main"></span></div>
+        <div class="row"><span class="row-label">充电盒固件</span><span class="row-value num" id="fw-case"></span></div>
+        <div class="row"><span class="row-label">Wi-Fi 固件</span><span class="row-value num" id="fw-wifi"></span></div>
+      </div>
+      <p class="note" id="reading-note"></p>
+    </section>
+
+    <section id="recordings-tab" role="tabpanel" aria-label="录音" hidden>
+      <p class="error-line" id="library-error" role="status" hidden></p>
+      <div id="recording-groups"></div>
+      <div class="empty" id="library-empty" hidden><strong id="empty-title"></strong><span id="empty-text"></span></div>
+    </section>
+
+    <footer class="action-bar">
+      <p class="recorder-note" id="recorder-note-bar" role="status" hidden></p>
+      <div class="seg" id="language-seg" aria-label="识别语言" hidden><button data-language="zh">中文</button><button data-language="en">英文</button></div>
+      <div class="seg" id="asr-seg" aria-label="字幕方式" hidden><button data-asr="live">实时</button><button data-asr="post">录后</button></div>
+      <button class="primary" id="primary" data-action="primaryAction"></button>
+    </footer>
+  </section>
+
+  <section class="detail" id="detail-view" hidden>
+    <nav class="nav" aria-label="录音操作">
+      <button class="icon-btn" aria-label="返回录音列表" data-action="goBack"><svg viewBox="0 0 24 24" class="icon"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+      <div class="nav-title"></div>
+      <button class="icon-btn" aria-label="搜索文字" data-action="toggleSearch"><svg viewBox="0 0 24 24" class="icon"><circle cx="11" cy="11" r="6.25"/><path d="m15.75 15.75 4 4"/></svg></button>
+      <button class="icon-btn" aria-label="更多" data-action="toggleOptions"><svg viewBox="0 0 24 24" class="icon"><circle cx="5.5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg></button>
+    </nav>
+    <div class="search" id="search-bar" hidden>
+      <label class="search-field"><svg viewBox="0 0 24 24" class="icon"><circle cx="11" cy="11" r="6.25"/><path d="m15.75 15.75 4 4"/></svg><input id="search-input" type="search" placeholder="搜索逐字稿" aria-label="搜索逐字稿" maxlength="80" enterkeyhint="search" autocomplete="off"><span class="count num" id="search-count" role="status"></span></label>
+      <button class="text-btn" data-action="clearSearch">取消</button>
+    </div>
+    <header class="head"><h1 id="title"></h1><p class="meta num" id="meta"></p></header>
+    <div id="doc-slot"></div>
+    <div class="mode">
+      <div class="seg" id="mode-seg" aria-label="显示语言"><button data-mode="both">中英</button><button data-mode="zh">中文</button><button data-mode="en">英文</button></div>
+      <button class="text-btn" id="translate-missing" data-action="requestTranslation" hidden></button>
+    </div>
+    <div class="notice-line" id="state-line" role="status" hidden></div>
+    <section class="transcript" id="transcript" aria-label="逐字稿"></section>
+    <footer class="player" aria-label="播放控制">
+      <p class="recorder-note" id="recorder-note-player" role="status" hidden></p>
+      <input class="seek" id="seek" type="range" min="0" max="100" step=".1" value="0" aria-label="播放进度">
+      <div class="times num"><span id="elapsed"></span><span id="duration"></span></div>
+      <div class="controls">
+        <button class="speed num" id="speed" aria-label="播放速度" data-action="cycleSpeed"></button>
+        <button class="play" id="play" data-action="togglePlayback"><svg viewBox="0 0 24 24" class="icon" id="play-icon"><path d="M8.5 5.75v12.5L18.25 12z"/></svg><svg viewBox="0 0 24 24" class="icon" id="pause-icon" hidden><rect x="7" y="5.5" width="3.4" height="13" rx="1"/><rect x="13.6" y="5.5" width="3.4" height="13" rx="1"/></svg></button>
+        <span class="spacer"></span>
+      </div>
+    </footer>
+  </section>
+
+  <section class="files" id="files-view" hidden aria-label="录音豆里的录音">
+    <nav class="nav">
+      <button class="icon-btn" aria-label="返回设备" data-action="closeDeviceFiles"><svg viewBox="0 0 24 24" class="icon"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+      <div class="nav-title">录音豆里的录音</div>
+      <button class="text-btn nav-text" id="files-all" data-action="toggleAllDeviceFiles"></button>
+    </nav>
+    <p class="files-summary num" id="files-summary"></p>
+    <p class="error-line" id="files-error" role="status" hidden></p>
+    <div class="group" id="files-list"></div>
+    <div class="empty" id="files-empty" hidden><strong>录音豆里没有录音</strong><span>按录音豆实体键录下的内容会出现在这里。</span></div>
+    <p class="note">删除只清掉录音豆里的文件；“录音”里已保存的文字和音频不受影响。</p>
+    <footer class="action-bar files-bar"><button class="stop" id="files-delete" data-action="askDeleteDeviceFiles"></button></footer>
+  </section>
+
+  <section class="live" id="live-view" hidden aria-label="正在录音">
+    <header class="live-head"><span class="dot" id="live-dot"></span><span class="live-status" id="live-status"></span><span class="live-clock num" id="live-clock"></span></header>
+    <div class="seg" id="live-mode-seg" aria-label="显示语言"><button data-mode="both">中英</button><button data-mode="zh">中文</button><button data-mode="en">英文</button></div>
+    <section class="live-text" id="live-text" aria-live="polite"></section>
+    <footer class="live-bar"><button class="stop" id="stop" data-action="stopCapture"></button><p class="hint" id="live-hint"></p></footer>
+  </section>
+
+  <button class="backdrop" id="backdrop" aria-label="关闭" data-action="closeSheets" hidden></button>
+  <section class="sheet" id="options-sheet" role="dialog" aria-modal="true" aria-label="更多" hidden>
+    <div class="sheet-title" id="sheet-title"></div>
+    <div class="sheet-group" id="speaker-group"><p class="sheet-note" id="speaker-note"></p><button class="sheet-row action" id="speaker-action"></button></div>
+    <div class="sheet-group">
+      <button class="sheet-row" data-format="txt"><span>导出文字</span><span>TXT</span></button>
+      <button class="sheet-row" id="export-audio" data-format="audio"><span>导出原始音频</span><span>WAV</span></button>
+    </div>
+    <button class="sheet-cancel" data-action="closeSheets">取消</button>
+  </section>
+  <section class="sheet" id="delete-sheet" role="dialog" aria-modal="true" aria-label="确认删除" hidden>
+    <div class="sheet-group"><p class="sheet-note" id="delete-note"></p><button class="sheet-row danger" id="delete-confirm" data-action="confirmDeleteDeviceFiles"></button></div>
+    <button class="sheet-cancel" data-action="closeSheets">取消</button>
+  </section>
+  <section class="sheet" id="device-sheet" role="dialog" aria-modal="true" aria-label="选择录音豆" hidden>
+    <div class="sheet-title">附近有多台录音豆，选择要连接的一台</div>
+    <div class="sheet-group" id="device-list"></div>
+    <button class="sheet-cancel" data-action="closeSheets">取消</button>
+  </section>
+  <button class="toast" id="notice" role="status" aria-label="关闭提示" data-action="dismissNotice" hidden><span id="notice-text"></span><svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="m7.5 7.5 9 9M16.5 7.5l-9 9"/></svg></button>
+  <audio id="recording-audio" preload="metadata"></audio>
+</main>
+<script src="lib/recording-store.js"></script><script src="h5/file-export.js"></script>
+<script src="h5/d3200-bundle.js"></script><script src="h5/minutes-runtime.js"></script>
+<script>
+window.require=function(name){if(name==='../../lib/recording-store')return MinutesRecordingStore;throw new Error('Unexpected import');};
+var audioElement=document.getElementById('recording-audio'),audioObjectUrl=null;
+window.MinutesHost={
+  validAudioUrl:function(value){try{var url=new URL(value,location.href);return url.origin===location.origin&&/^https?:$/.test(url.protocol)&&!url.username&&!url.password;}catch(_){return false;}},
+  setAudio:function(source){audioElement.pause();if(audioObjectUrl){URL.revokeObjectURL(audioObjectUrl);audioObjectUrl=null;}if(source.blob){audioObjectUrl=URL.createObjectURL(source.blob);audioElement.src=audioObjectUrl;}else if(this.validAudioUrl(source.url))audioElement.src=source.url;else throw new Error('音频地址无效');audioElement.load();},
+  play:function(){return audioElement.play();},pause:function(){audioElement.pause();},paused:function(){return audioElement.paused;},setPlaybackRate:function(speed){audioElement.playbackRate=speed;},
+  seekFraction:function(value){if(Number.isFinite(audioElement.duration))audioElement.currentTime=value*audioElement.duration;},seekSeconds:function(value){if(Number.isFinite(audioElement.duration))audioElement.currentTime=Math.max(0,Math.min(audioElement.duration,value));},skip:function(seconds){this.seekSeconds(audioElement.currentTime+seconds);},
+  textBlob:function(value,type){return new Blob([value],{type:type});},fetchAudio:async function(url){if(!this.validAudioUrl(url))throw new Error('没有可导出的音频');var result=await fetch(url,{credentials:'same-origin'});if(!result.ok)throw new Error('音频下载失败');return result.blob();},
+  download:function(blob,name){return MinutesFileExport.download(blob,name);},
+  dispose:function(){audioElement.pause();if(audioObjectUrl)URL.revokeObjectURL(audioObjectUrl);audioObjectUrl=null;}
+};
+window.Page=function(definition){window.previewPage=Object.assign({},definition,{data:Object.assign({},definition.data),setData:function(patch){Object.assign(this.data,patch);render(this.data);}});};
+var $=function(id){return document.getElementById(id);};
+function text(id,value){var el=$(id),next=value===undefined||value===null?'':String(value);if(el.textContent!==next)el.textContent=next;}
+// The attribute, not the property: SVG elements (the play/pause icons) have no hidden property.
+function hide(id,value){$(id).toggleAttribute('hidden',!!value);}
+function node(tag,className,value){var el=document.createElement(tag);if(className)el.className=className;if(value!==undefined)el.textContent=value;return el;}
+var CAPTURE=['draft','waiting','recording','finishing'];
+var AUTO_TITLE=/^录音 \d{4}\/\d{1,2}\/\d{1,2}/;
+var shown={};
+function changed(id,value){var el=$(id);if(shown[id]!==undefined&&shown[id]!==value){el.classList.remove('updated');void el.offsetWidth;el.classList.add('updated');}shown[id]=value;}
+function when(iso){var t=new Date(iso);if(!Number.isFinite(t.getTime()))return '';var hm=t.toTimeString().slice(0,5),now=new Date();return t.toDateString()===now.toDateString()?'今天 '+hm:(t.getMonth()+1)+'月'+t.getDate()+'日 '+hm;}
+function size(kb){if(!Number.isFinite(kb))return '—';if(kb<1024)return Math.round(kb)+' KB';var mb=kb/1024;if(mb<1024)return (mb<10?mb.toFixed(1):Math.round(mb))+' MB';var gb=mb/1024;return (gb<10?gb.toFixed(1):Math.round(gb))+' GB';}
+function titleOf(title,createdAt,summary){return AUTO_TITLE.test(title||'')?summary||'录音 · '+when(createdAt):title;}
+// Durations read as words so they can never be mistaken for a time of day.
+function span(ms){if(!Number.isFinite(ms)||ms<=0)return '';var s=Math.round(ms/1000);if(s<60)return s+' 秒';var m=Math.floor(s/60),r=s%60;if(m<60)return m+' 分'+(r?' '+r+' 秒':'');return Math.floor(m/60)+' 小时'+(m%60?' '+m%60+' 分':'');}
+function setOn(selector,test){document.querySelectorAll(selector).forEach(function(el){var on=test(el);el.classList.toggle('on',on);if(el.getAttribute('role')==='tab')el.setAttribute('aria-selected',String(on));else el.setAttribute('aria-pressed',String(on));});}
+function battery(prefix,percent,charging){
+  var known=Number.isFinite(percent),meter=$(prefix+'-meter'),value=$(prefix+'-value');
+  meter.querySelector('i').style.width=known?percent+'%':'0';meter.classList.toggle('low',known&&percent<=20&&charging!==true);
+  var label=known?percent+'%'+(charging===true?' · 充电中':''):'—';text(prefix+'-value',label);changed(prefix+'-value',label);
+  value.className='row-value num'+(charging===true?' good':known&&percent<=20?' warn':'');
+}
+function paint(container,parts){parts.forEach(function(part){container.append(part.match?node('mark','',part.text):document.createTextNode(part.text));});}
+// Search results open their sentence in the full transcript, so their time is a label, not a play button.
+function utterances(container,rows,live,multiSpeaker,results,flash){
+  rows.forEach(function(row){
+    var item=node('article','utt'+(row.final?'':' partial')+(results?' result':'')+(flash&&String(row.id)===flash?' flash':'')),line=node('div','utt-line');
+    if(!live)item.id='utt-'+row.id;
+    if(results)item.dataset.result=row.id;
+    if(multiSpeaker)line.append(node('span','speaker',row.speaker));
+    if(live||results)line.append(node('span','num',row.time));else{var time=node('button','time-btn num',row.time);time.dataset.seek=row.id;time.setAttribute('aria-label','从 '+row.time+' 开始播放');line.append(time);}
+    // While recording a finished sentence's translation is still on its way;
+    // after saving, a sentence without one is genuinely untranslated.
+    if(!row.final)line.append(node('span','tag','识别中'));
+    else if(live&&(row.pendingTranslation||row.untranslated))line.append(node('span','tag','翻译中'));
+    else if(row.untranslated)line.append(node('span','tag','未翻译'));
+    var body=node('div','utt-text'+(row.untranslated?' fallback':''));paint(body,row.primaryParts);item.append(line,body);
+    if(row.secondaryParts.length){var trans=node('div','utt-trans');paint(trans,row.secondaryParts);item.append(trans);}
+    container.append(item);
+  });
+}
+function renderDevice(d){
+  var dev=d.device||{},connected=!!d.connected,hasReading=!!dev.readAt;
+  var state=d.busy==='connect'?'正在连接…':connected?'已连接 · '+(dev.recording?(d.recorderUnreceived?'正在录音，手机未接收':'正在录音'):'未在录音'):hasReading?'未连接 · 读取于 '+when(dev.readAt):'尚未读取';
+  text('device-state',state);$('device-dot').className='dot'+(connected?(dev.recording?' rec':' on'):'');
+  hide('disconnect',!connected||!!d.busy);
+  battery('mic',dev.micBattery,dev.micCharging);battery('case',dev.caseBattery,dev.caseCharging);
+  var storage=dev.storage&&dev.storage.totalKB>0?dev.storage:null,used=storage?storage.totalKB-storage.freeKB:null;
+  text('storage-used',storage?'已用 '+size(used):'—');text('storage-total',storage?'共 '+size(storage.totalKB):'');changed('storage-used',storage?used:null);
+  var fill=$('storage-fill');fill.style.width=storage?Math.min(100,used/storage.totalKB*100)+'%':'0';fill.style.minWidth=storage&&used>0?'3px':'0';
+  var bound=dev.boundAdvertised;text('bound-value',bound===true?'已绑定 · 原厂也会转写':bound===false?'未绑定 · 原厂不转写':'未知');
+  $('bound-value').className='row-value'+(bound===true?' warn':bound===false?' good':' muted');
+  var models=d.capabilities.models||{stepfun:true,doubao:false};
+  document.querySelectorAll('[data-live-model],[data-file-model]').forEach(function(el){var m=el.dataset.liveModel||el.dataset.fileModel;el.disabled=m==='doubao'&&!models.doubao;});
+  setOn('#live-model-seg [data-live-model]',function(el){return el.dataset.liveModel===(models[d.liveModel]?d.liveModel:'stepfun');});
+  setOn('#file-model-seg [data-file-model]',function(el){return el.dataset.fileModel===(models[d.fileModel]?d.fileModel:'stepfun');});
+  text('model-note',models.doubao?'实时：豆包 1 元/时，StepFun 4.2 元/时（11 月 9 日起）。录后：StepFun 0.45 元/时（11 月 9 日起），豆包 0.8 元/时。两种方式录完都会自动区分发言人。':'豆包尚未在私有服务上配置，暂时只能用 StepFun。两种方式录完都会自动区分发言人。');
+  text('fw-main',dev.firmware||'—');text('fw-case',dev.caseFirmware||'—');text('fw-wifi',dev.wifiFirmware||'—');
+  text('reading-note',!hasReading?'连接录音豆后显示电量、存储与固件。连接过一次后，打开页面会自动连接。':connected?'实时读数；按一下录音豆实体键就会开始录音。':'以上是'+when(dev.readAt)+'连接时的读数，连接后刷新。');
+}
+function renderLibrary(d){
+  var groups=$('recording-groups');
+  // Rebuilt only when the list itself is replaced, so captions and status updates leave it alone.
+  if(groups.shownRecords!==d.records){groups.shownRecords=d.records;groups.replaceChildren();libraryGroups(groups,d.records);}
+  hide('library-error',!d.error);text('library-error',d.error);
+  var empty=!d.records.length&&!d.error;hide('library-empty',!empty);
+  text('empty-title',d.loading?'正在读取录音…':'还没有录音');text('empty-text',d.loading?'':'在「设备」里连接录音豆，开始第一段录音。');
+}
+function libraryGroups(groups,items){
+  var records=items.slice().sort(function(a,b){return String(b.createdAt).localeCompare(String(a.createdAt));}),day=null,list=null;
+  records.forEach(function(record){
+    if(record.dayText!==day){day=record.dayText;groups.append(node('h2','day',day));list=node('div','list');groups.append(list);}
+    var item=node('button','item');item.dataset.record=record.id;
+    var auto=AUTO_TITLE.test(record.title||'')&&!record.summaryTitle,top=node('div','item-top');
+    top.append(node('span','item-title',auto?(record.segments&&record.segments.length?record.previewText:'未识别到文字'):record.summaryTitle||record.title),node('span','item-time num',record.timeText));
+    var meta=node('div','item-meta num'),length=span(record.durationMs);if(length)meta.append(document.createTextNode(length+' · '));
+    meta.append(node('span',record.documentReady?'doc':record.state!=='stopped'?'warn':'',record.stateText));
+    if(record.sourceType&&record.sourceType!=='live_device')meta.append(document.createTextNode(' · 回放测试'));
+    item.append(top,meta);if(!auto)item.append(node('div','item-preview',record.previewText));
+    list.append(item);
+  });
+}
+function renderDetail(d){
+  var capturing=CAPTURE.includes(d.captureState);
+  text('title',titleOf(d.title,d.createdAt,d.summaryTitle));var length=span(d.durationMs);
+  text('meta',[AUTO_TITLE.test(d.title||'')&&!d.summaryTitle?'':when(d.createdAt),length?'时长 '+length:''].filter(Boolean).join(' · '));
+  // One place for each problem: an interrupted capture, or a recording saved here but not yet on the private service.
+  var line=$('state-line');line.replaceChildren();
+  if(d.captureState==='error')line.append(node('span','','录音未正常收尾，已保留收到的文字和音频。'));
+  else if(d.transcribing)line.append(node('span','',d.rows.length?'正在识别全文并区分发言人，完成后自动更新。':'正在识别全文并区分发言人…'));
+  else if(d.fileJobError)line.append(node('span','',d.fileJobError+(d.rows.length?'；实时字幕已保留。':'')));
+  else if(d.syncFailed){line.append(node('span','','本机已保存，还没同步到私有服务。'));var retry=node('button','text-btn','重试');retry.dataset.action='retrySync';retry.disabled=!!d.busy;line.append(retry);}
+  hide('state-line',!line.childNodes.length);
+  var slot=$('doc-slot');slot.replaceChildren();
+  if(d.capabilities.documents&&!capturing){
+    var url=typeof d.documentUrl==='string'&&/^https:\/\/[a-z0-9-]+\.feishu\.cn\/docx\/[A-Za-z0-9]+$/.test(d.documentUrl)?d.documentUrl:'';
+    var row=node(url?'a':'div','doc-row');if(url){row.href=url;row.target='_blank';row.rel='noopener noreferrer';}
+    var icon=node('span','doc-icon');icon.innerHTML='<svg viewBox="0 0 24 24" class="icon"><path d="M7 3.75h6.5L18 8.25v12H7z"/><path d="M13.5 3.75v4.5H18"/><path d="M9.75 12.25h5.5M9.75 15.75h5.5"/></svg>';
+    var body=node('span','doc-text');body.append(node('span','doc-title','飞书文档'),node('span','doc-sub',d.documentMessage));
+    row.append(icon,body);
+    var busy=['queued','summarizing','creating','securing','writing','verifying','retrying'].includes(d.documentStatus);
+    if(url)row.append(node('span','doc-go','打开'));
+    else if(busy){var refresh=node('button','doc-go','刷新');refresh.dataset.action='refreshDocument';row.append(refresh);}
+    else if(['idle','failed'].includes(d.documentStatus)&&d.captureState==='stopped'&&!d.transcribing){var create=node('button','doc-go',d.documentStatus==='failed'?'重试':'生成');create.dataset.action='requestDocument';create.disabled=!!d.busy;row.append(create);}
+    slot.append(row);
+  }
+  setOn('#mode-seg [data-mode]',function(el){return el.dataset.mode===d.displayMode;});
+  var canTranslate=d.capabilities.translation&&d.translationMissing>0&&d.captureState==='stopped';
+  hide('translate-missing',!canTranslate&&d.busy!=='translation');text('translate-missing',d.busy==='translation'?'正在生成译文…':'生成译文');$('translate-missing').disabled=!!d.busy;
+  // Searching keeps only the field and the matching sentences: nothing else can shift under the keyboard.
+  $('detail-view').classList.toggle('searching',!!d.searchOpen);
+  var panel=$('transcript'),shape=[d.searchResults,d.searchQuery,d.flashRow,d.transcribing,d.speakerCount>1].join('\u0001');
+  // Rebuilt only when its content changes, so playback and status updates leave the text and the scroll alone.
+  if(panel.shownRows!==d.rows||panel.shownShape!==shape){
+    panel.shownRows=d.rows;panel.shownShape=shape;panel.replaceChildren();
+    if(d.searchResults&&!d.rows.length)panel.append(node('div','blank','没有找到“'+d.searchQuery.trim()+'”'));
+    else if(!d.rows.length)panel.append(node('div','blank',d.transcribing?'录完正在识别全文，稍等片刻…':'暂无文字记录'));
+    else utterances(panel,d.rows,false,d.speakerCount>1,d.searchResults,d.flashRow);
+  }
+  hide('search-bar',!d.searchOpen);var input=$('search-input');
+  // The field being typed in is never rewritten: that would break pinyin composition.
+  if(document.activeElement!==input&&input.value!==d.searchQuery)input.value=d.searchQuery;
+  text('search-count',d.searchResults&&d.searchCount?d.searchCount+' 处':'');
+  var seek=$('seek');seek.value=d.progress;seek.disabled=!d.hasAudio;text('elapsed',d.elapsed);text('duration',d.duration);
+  text('speed',d.speed+'×');$('play').disabled=!d.hasAudio;$('play').setAttribute('aria-label',d.running?'暂停':'播放');hide('play-icon',d.running);hide('pause-icon',!d.running);
+  // A jump happens once, when it is asked for, never again on later updates.
+  if(d.scrollTarget&&d.scrollTarget!==scrolledTo){var jump=d.scrollTarget,target=$(jump);if(target){target.scrollIntoView({block:'center'});
+    // The keyboard closing moves the page; settle on the sentence again.
+    setTimeout(function(){var again=$(jump);if(again)again.scrollIntoView({block:'center'});},350);}}
+  scrolledTo=d.scrollTarget;
+  // Another recording opens at its title, not at the list's scroll position.
+  if(d.recordingId!==openedId&&!d.scrollTarget)window.scrollTo(0,0);
+  openedId=d.recordingId;
+  if(d.searchOpen&&d.searchQuery!==searchedFor)window.scrollTo(0,0);
+  searchedFor=d.searchOpen?d.searchQuery:null;
+}
+var scrolledTo='',searchedFor=null,openedId=null;
+var CHECK='<svg viewBox="0 0 24 24" class="icon"><path d="m6.5 12.5 3.5 3.5 7.5-8"/></svg>';
+// Recordings on the recorder: pick, then confirm; the one being recorded is shown but cannot be picked.
+function renderFiles(d){
+  var files=d.deviceFiles,picked=d.deviceFilesSelected,pickable=files.filter(function(file){return !file.active;});
+  var storage=d.device&&d.device.storage&&d.device.storage.totalKB>0?d.device.storage:null;
+  text('files-summary',d.deviceFilesLoading&&!files.length?'正在读取录音豆…':[files.length?'共 '+files.length+' 段':'',storage?'已用 '+size(storage.totalKB-storage.freeKB)+' / '+size(storage.totalKB):''].filter(Boolean).join(' · '));
+  hide('files-error',!d.deviceFilesError);text('files-error',d.deviceFilesError);
+  var list=$('files-list');list.replaceChildren();
+  files.forEach(function(file){
+    var on=picked.indexOf(file.id)!==-1,row=node('button','row file-row'+(on?' on':'')+(file.active?' locked':''));
+    row.dataset.deviceFile=file.id;row.setAttribute('role','checkbox');row.setAttribute('aria-checked',on?'true':'false');row.disabled=file.active||!!d.busy;
+    var mark=node('span',file.active?'dot rec':'check');if(on)mark.innerHTML=CHECK;
+    var body=node('span','file-text'),meta=node('span','file-meta');
+    body.append(node('span','file-when num',file.dayText+(file.timeText?' '+file.timeText:'')),meta);
+    [file.active?'正在录音，结束后才能删除':span(file.durationMs),file.active?'':file.saved?'已在“录音”里':'只在录音豆里'].filter(Boolean).forEach(function(part,i){if(i)meta.append(document.createTextNode(' · '));meta.append(node('span',part==='只在录音豆里'?'only':'',part));});
+    row.append(mark,body);list.append(row);
+  });
+  hide('files-list',!files.length);hide('files-empty',d.deviceFilesLoading||!!d.deviceFilesError||!!files.length||!d.connected);
+  text('files-all',pickable.length&&picked.length===pickable.length?'取消全选':'全选');$('files-all').disabled=!pickable.length||!!d.busy;hide('files-all',!pickable.length);
+  var del=$('files-delete');text('files-delete',d.busy==='delete'?'正在删除…':picked.length?'删除 '+picked.length+' 段':'删除所选');del.disabled=!picked.length||!!d.busy||!d.connected;
+  if(d.deleteOpen){
+    var only=files.filter(function(file){return picked.indexOf(file.id)!==-1&&!file.saved;}).length;
+    text('delete-note','将从录音豆删除 '+picked.length+' 段录音，删除后无法恢复。'+(!only?'它们都已在“录音”里，那里的内容会保留。':only===picked.length?(only>1?'这 '+only+' 段都':'这段')+'只在录音豆里，删除后就找不到了。':'其中 '+only+' 段只在录音豆里，删除后就找不到了。'));
+    text('delete-confirm','删除 '+picked.length+' 段');
+  }
+}
+var liveStart=null,liveFor=null,liveTimer=null;
+function tick(){if(liveStart!==null)text('live-clock',MinutesRecordingStore.timeLabel(Date.now()-liveStart));}
+function renderLive(d){
+  var recording=d.captureState==='recording',finishing=d.captureState==='finishing',waiting=!recording&&!finishing;
+  // The clock is anchored to the audio timeline: it starts when audio does and
+  // moves forward whenever a caption ends later than the clock shows.
+  if(liveFor!==d.recordingId){liveFor=d.recordingId;liveStart=null;}
+  if(recording){var anchor=Date.now()-(d.durationMs||0);if(liveStart===null||anchor<liveStart)liveStart=anchor;}
+  if(recording&&!liveTimer){liveTimer=setInterval(tick,1000);}if(!recording&&liveTimer){clearInterval(liveTimer);liveTimer=null;}
+  $('live-dot').className='dot'+(recording?' rec':'');tick();if(!liveStart)text('live-clock','');
+  text('live-status',finishing?'正在保存…':recording?'正在录音':'等待开始');
+  setOn('#live-view [data-mode]',function(el){return el.dataset.mode===d.displayMode;});
+  var post=d.recordAsrMode==='post';hide('live-mode-seg',post);
+  var box=$('live-text'),stick=box.scrollHeight-box.scrollTop-box.clientHeight<80;box.replaceChildren();
+  if(post){var quiet=node('div','waiting');quiet.append(node('strong','',recording?'正在录音':'按一下录音豆的实体键'),node('span','',recording?'录后模式：录完自动识别全文并区分发言人。':'录后模式：录音时不出字幕，录完再出全文。'));box.append(quiet);}
+  else if(!d.rows.length){var wait=node('div','waiting');wait.append(node('strong','',recording?'正在听…':'按一下录音豆的实体键'),node('span','',recording?'说完的句子会出现在这里，并附上译文。':'开始后，字幕会边说边出现。'));box.append(wait);}
+  else utterances(box,d.rows,true,d.speakerCount>1);
+  if(stick)box.scrollTop=box.scrollHeight;
+  var stop=$('stop');stop.dataset.action=waiting?'cancelCapture':'stopCapture';stop.classList.toggle('cancel',waiting);
+  text('stop',finishing?'正在保存…':waiting?'取消':'停止并保存');stop.disabled=finishing||!!d.busy;
+  text('live-hint',finishing?'正在等最后一句确认，请勿关闭页面。':waiting?'还没开始录音，可以随时取消。':'按录音豆实体键才会停止录音；只点这里，录音豆会继续录。');
+}
+function render(d){
+  var capturing=CAPTURE.includes(d.captureState),live=d.view==='detail'&&capturing,detail=d.view==='detail'&&!capturing;
+  if(!live&&liveTimer){clearInterval(liveTimer);liveTimer=null;}
+  hide('library-view',d.view!=='library');hide('detail-view',!detail);hide('live-view',!live);hide('files-view',d.view!=='files');
+  $('manage-files').disabled=!d.connected||!!d.busy||capturing;
+  setOn('.top [data-tab]',function(el){return el.dataset.tab===d.tab;});
+  hide('device-tab',d.tab!=='device');hide('recordings-tab',d.tab!=='recordings');
+  renderDevice(d);renderLibrary(d);
+  // Stopping on the phone leaves the recorder recording: say so until the key ends it.
+  var unreceived=!!(d.connected&&d.recorderUnreceived);
+  ['recorder-note-bar','recorder-note-player'].forEach(function(id){
+    var note=$(id);hide(id,!unreceived);
+    if(unreceived&&!note.childNodes.length)note.append(node('span','dot rec'),node('span','','录音豆还在录音，手机没有接收。按一下实体键结束。'));
+  });
+  var liveModels=d.capabilities.models||{},stepfunLive=d.asrMode==='live'&&(liveModels[d.liveModel]?d.liveModel:'stepfun')==='stepfun';
+  hide('language-seg',!d.connected||!!d.busy||!stepfunLive);setOn('#language-seg [data-language]',function(el){return el.dataset.language===d.language;});
+  hide('asr-seg',!d.connected||!!d.busy);setOn('#asr-seg [data-asr]',function(el){return el.dataset.asr===d.asrMode;});
+  text('primary',d.busy==='connect'?'正在连接…':d.busy==='start'?'正在准备…':d.connected?'开始录音':'连接录音豆');$('primary').disabled=!!d.busy;
+  if(detail)renderDetail(d);else openedId=null;if(live)renderLive(d);if(d.view==='files')renderFiles(d);
+  var options=detail&&d.optionsOpen,devices=d.devices.length>1&&!d.connected,confirm=d.view==='files'&&d.deleteOpen;
+  hide('options-sheet',!options);hide('device-sheet',!devices);hide('delete-sheet',!confirm);hide('backdrop',!options&&!devices&&!confirm);
+  if(options){
+    text('sheet-title',titleOf(d.title,d.createdAt,d.summaryTitle));hide('speaker-group',!d.capabilities.speakers);text('speaker-note',d.speakerJobMessage);
+    var status=d.speakerJobStatus,action=$('speaker-action'),polling=['submitting','pending','running','waiting','query_error'].includes(status);
+    action.dataset.action=status==='idle'?'requestSpeakers':polling?'refreshSpeakers':status==='ready'?'applySpeakerResult':'';
+    text('speaker-action',status==='idle'?'识别发言人':polling?'刷新识别进度':status==='ready'?'应用识别结果并保留原稿':'');hide('speaker-action',!action.dataset.action);action.disabled=!!d.busy;
+    $('export-audio').disabled=!d.hasAudio;
+  }
+  var list=$('device-list');list.replaceChildren();d.devices.forEach(function(device){var row=node('button','sheet-row',device.name||'soundcore Work');row.dataset.device=device.deviceId;row.disabled=!!d.busy;list.append(row);});
+  hide('notice',!d.notice);text('notice-text',d.notice);
+  if(d.notice){var edge=options?$('options-sheet'):devices?$('device-sheet'):live?document.querySelector('.live-bar'):detail?document.querySelector('.player'):d.view==='files'?document.querySelector('.files-bar'):document.querySelector('.action-bar');
+    $('notice').style.bottom=((edge&&edge.offsetHeight)||0)+10+'px';}
+}
+</script><script src="pages/index/index.js"></script>
+<script>
+previewPage.onLoad();render(previewPage.data);
+document.addEventListener('click',function(event){
+  var el=event.target.closest('[data-action],[data-tab],[data-record],[data-language],[data-mode],[data-asr],[data-live-model],[data-file-model],[data-device],[data-format],[data-seek],[data-result],[data-device-file]');if(!el||el.disabled)return;
+  var ds=el.dataset,operation;
+  try{
+    // Focused inside the tap itself: iOS opens the keyboard only then.
+    if(ds.action){operation=previewPage[ds.action]();if(ds.action==='toggleSearch')$('search-input').focus();}
+    else if(ds.tab)operation=previewPage.setTab(ds.tab);else if(ds.record)operation=previewPage.openRecording(ds.record);
+    else if(ds.language)operation=previewPage.setLanguage(ds.language);else if(ds.mode)operation=previewPage.setDisplayMode(ds.mode);
+    else if(ds.asr)operation=previewPage.setAsrMode(ds.asr);else if(ds.liveModel)operation=previewPage.setLiveModel(ds.liveModel);
+    else if(ds.fileModel)operation=previewPage.setFileModel(ds.fileModel);
+    else if(ds.device)operation=previewPage.connectDevice({currentTarget:{dataset:{device:ds.device}}});
+    else if(ds.format)operation=previewPage.exportFile(ds.format);else if(ds.seek)operation=previewPage.seekSegment(ds.seek);
+    else if(ds.result){$('search-input').blur();operation=previewPage.openResult(ds.result);}
+    else if(ds.deviceFile)operation=previewPage.toggleDeviceFile(ds.deviceFile);
+    if(operation&&operation.catch)operation.catch(function(error){previewPage.setData({notice:error.message});});
+  }catch(error){previewPage.setData({notice:error.message});}
+});
+$('seek').addEventListener('input',function(event){previewPage.seek(event.target.value);});
+var composing=false,searchField=$('search-input');
+// Pinyin is searched once a character is chosen, not letter by letter.
+searchField.addEventListener('compositionstart',function(){composing=true;});
+searchField.addEventListener('compositionend',function(event){composing=false;previewPage.updateSearch(event.target.value);});
+searchField.addEventListener('input',function(event){if(!composing&&!event.isComposing)previewPage.updateSearch(event.target.value);});
+// The search key puts the keyboard away so the results can be read.
+searchField.addEventListener('keydown',function(event){if(event.key==='Enter'&&!event.isComposing){event.preventDefault();searchField.blur();}});
+audioElement.addEventListener('timeupdate',function(){previewPage.onAudioTime(audioElement);});audioElement.addEventListener('loadedmetadata',function(){previewPage.onAudioTime(audioElement);});
+audioElement.addEventListener('play',function(){previewPage.onAudioState('playing');});audioElement.addEventListener('playing',function(){previewPage.onAudioState('playing');});audioElement.addEventListener('pause',function(){previewPage.onAudioState('paused');});
+audioElement.addEventListener('ended',function(){previewPage.onAudioState('ended');});audioElement.addEventListener('error',function(){previewPage.onAudioState('error');});
+document.addEventListener('keydown',function(event){if(event.key==='Escape'){previewPage.closeSheets();if(previewPage.data.searchOpen)previewPage.clearSearch();}});
+document.addEventListener('visibilitychange',function(){if(document.hidden)previewPage.onHide();});window.addEventListener('pagehide',function(){previewPage.onUnload();});
+// pagehide released the recorder and the runtime; a page restored from the back-forward cache starts over.
+window.addEventListener('pageshow',function(event){if(event.persisted)location.reload();});
+window.addEventListener('beforeunload',function(event){if(previewPage.isCapturing()){event.preventDefault();event.returnValue='';}});
+</script></body></html>

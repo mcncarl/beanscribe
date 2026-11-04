@@ -1,0 +1,31 @@
+[Unit]
+Description=Luyindou private recording gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=luyindou
+Group=luyindou
+WorkingDirectory=/opt/luyindou
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/luyindou/.venv/bin/python /opt/luyindou/tools/run.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+LockPersonality=true
+ReadWritePaths=/opt/luyindou/data /opt/luyindou/secrets
+
+[Install]
+WantedBy=multi-user.target

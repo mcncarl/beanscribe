@@ -1,0 +1,14 @@
+{
+  "name": "luyindou",
+  "version": "0.1.0",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "description": "录音豆：在飞书中连接 D3200，转写、播放并生成私人文档。",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "build": "node tools/build-d3200-browser.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

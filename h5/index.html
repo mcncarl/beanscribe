@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>录音豆 · 飞书网页开发版</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#fff;color:#1f2329;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
+    [hidden]{display:none!important}.setup{max-width:540px;margin:auto;padding:18px 20px 0;background:#f5f6f7}.label{font-size:12px;color:#646a73}h1{font-size:22px;line-height:1.4;margin:8px 0}p{font-size:13px;line-height:1.65;color:#646a73}
+    details{padding:12px 0;border-bottom:1px solid #d9dfd4}summary{font-size:14px;cursor:pointer}button{margin-top:10px;border:1px solid #bac8bc;border-radius:7px;background:#e5e9e0;color:#214e40;padding:10px 14px;font:inherit;cursor:pointer}button:disabled{opacity:.5}
+    #status{white-space:pre-wrap;overflow-wrap:anywhere}iframe{display:block;width:100%;height:100vh;height:100dvh;margin:0;border:0;background:#fff}
+  </style>
+</head>
+<body>
+  <section class="setup" id="diagnostics" hidden>
+    <div class="label">录音豆 · 部署诊断</div>
+    <h1>在飞书里看随身字幕</h1>
+    <p>正式页面使用真实私有服务；此处只检查工具包方法，手机蓝牙与现场转写仍需实测。</p>
+    <details>
+      <summary>开发环境检查</summary>
+      <p>检查会从飞书官方 CDN 加载开发工具包。出现接口名称只表示工具包已加载，仍需服务端签名和真机验证。</p>
+      <button id="inspect" type="button">检查飞书工具包</button>
+      <p id="status" role="status" aria-live="polite">尚未检查。此工具不会验证签名或连接设备。</p>
+    </details>
+  </section>
+  <p id="entry" hidden><a href="../preview.html">打开录音豆字幕</a></p>
+  <script src="environment.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      if (new URLSearchParams(location.search).get('diagnostics') !== '1') {
+        // Native JSAPI bridges belong to the top-level Feishu web container.
+        // Keep the real application there instead of hiding it in an iframe.
+        document.getElementById('entry').hidden = false;
+        location.replace('../preview.html' + location.search + location.hash);
+        return;
+      }
+      // Keep deployment diagnostics out of the normal caption screen.
+      document.getElementById('diagnostics').hidden = new URLSearchParams(location.search).get('diagnostics') !== '1';
+      var button = document.getElementById('inspect');
+      var status = document.getElementById('status');
+      var loading = false;
+      function report() {
+        var result = FeishuEnvironment.inspect(window);
+        status.textContent = (result.sdkLoaded ? '飞书工具包已加载。' : '未检测到完整的飞书工具包。') +
+          '\n蓝牙接口名称：' + result.declaredBleMethods.length + ' / 7。' +
+          '\nJSAPI 尚未鉴权；未连接设备；实时转写尚未验证。' +
+          '\n网页实时识别需要私有服务转发，不能复用小程序的直连接口。';
+        button.disabled = false;
+        loading = false;
+      }
+      button.addEventListener('click', function () {
+        if (loading) return;
+        if (window.h5sdk) { report(); return; }
+        loading = true;
+        button.disabled = true;
+        status.textContent = '正在加载飞书官方工具包…';
+        var script = document.createElement('script');
+        var settled = false;
+        var timeout = setTimeout(function () { fail(); }, 12000);
+        function fail() {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          script.remove();
+          loading = false;
+          button.disabled = false;
+          status.textContent = '工具包加载失败或超时。当前仍可查看离线文字示例。';
+        }
+        script.src = FeishuEnvironment.SDK_URL;
+        script.referrerPolicy = 'no-referrer';
+        script.onload = function () {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          report();
+        };
+        script.onerror = fail;
+        document.head.appendChild(script);
+      });
+    }());
+  </script>
+</body>
+</html>

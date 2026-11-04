@@ -1,0 +1,9 @@
+{
+  "source": "synthetic 440 Hz sine wave; no human voice or device recording",
+  "sampleRate": 16000,
+  "channels": 1,
+  "packetBytes": 160,
+  "packets": 332,
+  "durationMs": 6640,
+  "sha256": "42a3d680b92f41a534223507450bd94f834f82a1989b7d44489280392a6536ee"
+}

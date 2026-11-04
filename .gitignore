@@ -1,0 +1,26 @@
+# Personal configuration, keys, recordings and verification artifacts.
+config/*.json
+!config/*.example.json
+secrets/
+data/
+work/
+.env
+.env.*
+!.env.example
+.venv/
+node_modules/
+__pycache__/
+*.py[cod]
+.DS_Store
+*.log
+*.har
+*.pcap
+*.pcapng
+*.wav
+*.mp3
+*.m4a
+*.mp4
+*.ipa
+*.apk
+*.pem
+*.key

@@ -1,0 +1,14 @@
+# Replace with your own domain. Use a dedicated hostname for this example.
+record.example.com {
+    redir / /minutes/h5/index.html
+    @minutes path /minutes /minutes/*
+    handle @minutes {
+        reverse_proxy 127.0.0.1:8897 {
+            # Replace any client-supplied value; the loopback gateway trusts this header.
+            header_up CF-Connecting-IP {remote_host}
+        }
+    }
+    handle {
+        respond 404
+    }
+}

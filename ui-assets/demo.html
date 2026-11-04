@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>录音豆实时字幕 · 妙记界面本地预览</title>
+<link rel="stylesheet" href="minutes.css">
+</head>
+<body>
+<main class="minutes-screen" id="minutes-screen">
+  <nav class="toolbar" id="toolbar" aria-label="录音操作">
+    <button class="icon-button back-button" aria-label="返回" data-action="goBack"><span class="back-icon"></span></button><div class="toolbar-spacer"></div>
+    <button class="icon-button" aria-label="AI 纪要" data-action="showAi"><span class="ai-icon"></span></button>
+    <button class="icon-button" aria-label="搜索文字" data-action="toggleSearch"><span class="search-icon"></span></button>
+    <button class="icon-button" aria-label="分享" data-action="showShare"><span class="share-icon"><span class="share-arrow"></span></span></button>
+  </nav>
+  <header class="record-header" id="record-header"><div class="record-title" id="title"></div><div class="record-meta"><span class="clock-icon"></span><span id="date"></span></div><div class="prototype-status"><span class="status-dot" id="status-dot"></span><span id="status"></span></div></header>
+  <div class="tabs-scroll" id="tabs-scroll"><div class="tabs" role="tablist" aria-label="录音内容">
+    <button class="tab" role="tab" data-tab="transcript" aria-controls="transcript-panel">文字记录</button><button class="tab" role="tab" data-tab="summary" aria-controls="summary-panel">纪要</button><button class="tab" role="tab" data-tab="chapters" aria-controls="chapters-panel">章节</button><button class="tab" role="tab" data-tab="speakers" aria-controls="speakers-panel">发言人 (1)</button><button class="tab" role="tab" data-tab="info" aria-controls="info-panel">录音信息</button>
+  </div></div>
+  <div id="search-header" class="search-header" hidden>
+    <div class="search-bar"><div class="search-field"><span class="search-icon"></span><input id="search-input" class="search-input" type="search" placeholder="搜索" aria-label="搜索文字记录" maxlength="80"><button class="clear-query" id="clear-query" aria-label="清除搜索" data-action="clearQuery" hidden>×</button></div><button class="text-button" data-action="clearSearch">取消</button></div>
+    <div id="search-keywords" class="search-keywords"></div><div class="search-prototype-status" id="search-status"></div>
+  </div>
+  <div class="minutes-content" id="minutes-content">
+    <section id="transcript-panel" role="tabpanel" aria-label="文字记录" class="transcript-view"></section>
+    <section id="summary-panel" role="tabpanel" aria-label="纪要" class="empty-view" hidden><img class="empty-illustration" src="illustration_empty-neutral-no-content.svg" alt=""><div class="empty-label">会议内容较短，没有生成智能总结</div></section>
+    <section id="chapters-panel" role="tabpanel" aria-label="章节" class="empty-view" hidden><img class="empty-illustration" src="illustration_empty-neutral-no-content.svg" alt=""><div class="empty-label">会议内容较短，没有生成智能章节</div></section>
+    <section id="speakers-panel" role="tabpanel" aria-label="发言人" class="secondary-view speakers-view" hidden><div class="speaker-profile"><span class="speaker-avatar"><span class="person-icon"></span></span><span>发言人 1</span><span class="speaker-percent">93%</span></div><div class="speaker-track"><div class="speaker-fill"></div></div><div class="local-data-note">预设占比示例</div></section>
+    <section id="info-panel" role="tabpanel" aria-label="录音信息" class="secondary-view info-view" hidden><div class="info-group"><div class="info-label">所有者</div><div class="info-person"><span class="speaker-avatar"><span class="person-icon"></span></span><span>本地示例</span></div></div><div class="info-group"><div class="info-label">参与者</div><div class="info-person"><span class="speaker-avatar"><span class="person-icon"></span></span></div></div><div class="info-group"><div class="info-label">创建时间</div><div class="info-value" id="created-at"></div></div></section>
+  </div>
+  <div class="search-navigation" id="search-navigation" hidden><span class="search-count" id="search-count" role="status"></span><button class="icon-button" id="previous-match" aria-label="上一处匹配" data-action="previousMatch"><span class="match-arrow up"></span></button><button class="icon-button" id="next-match" aria-label="下一处匹配" data-action="nextMatch"><span class="match-arrow down"></span></button></div>
+  <div id="notice" class="notice" role="status" hidden data-action="dismissNotice"></div>
+  <footer class="player" aria-label="示例播放控制">
+    <input class="seek-slider" id="seek" type="range" min="0" max="100" step="1" value="0" aria-label="示例播放进度">
+    <div class="player-time"><span id="elapsed"></span><span id="duration"></span></div>
+    <div class="player-controls"><button id="speed" class="speed-control" aria-label="播放速度" data-action="openSpeed"></button><button class="icon-button" aria-label="后退 15 秒" data-action="skipBack"><span class="skip-icon backward">15</span></button><button id="play" class="play-control" aria-label="播放字幕示例" data-action="togglePlayback"><span id="play-icon" class="play-icon"></span></button><button class="icon-button" aria-label="前进 15 秒" data-action="skipForward"><span class="skip-icon forward">15</span></button><button class="icon-button more-control" aria-label="更多选项" data-action="toggleOptions">•••</button></div>
+  </footer>
+  <button class="sheet-backdrop" id="sheet-backdrop" aria-label="关闭面板" data-action="closeSheets" hidden></button>
+  <section class="bottom-sheet speed-sheet" id="speed-sheet" role="dialog" aria-modal="true" aria-label="播放速度" hidden><div id="speed-scale" class="speed-scale"></div><button class="silence-row" id="silence-row" role="switch" aria-checked="false" data-action="toggleSkipSilence"><span class="skip-silence-icon">⇢</span><span>跳过空白片段</span><span class="toggle-switch" id="silence-switch"><span></span></span></button></section>
+  <section class="bottom-sheet more-sheet" id="options" role="dialog" aria-modal="true" aria-label="更多选项" hidden>
+    <div class="sheet-header"><div class="record-icon"><span class="microphone-icon"></span></div><div class="sheet-record"><div class="sheet-title" id="sheet-title"></div><div class="sheet-owner">所有者：本地示例</div></div><button class="close-sheet" aria-label="关闭更多选项" data-action="closeSheets">×</button></div>
+    <div class="more-scroll"><div class="menu-group">
+      <button class="menu-row" data-action="showShare"><span class="menu-icon"><span class="share-icon"><span class="share-arrow"></span></span></span><span>分享</span></button>
+      <button class="menu-row" data-option="podcast"><span class="menu-icon"><span class="headphones-icon"></span></span><span>播客模式</span></button>
+      <button class="menu-row" data-option="rename"><span class="menu-icon"><span class="edit-icon"></span></span><span>重命名</span></button>
+      <button class="menu-row" data-option="speaker"><span class="menu-icon"><span class="pencil-icon"></span></span><span>修改说话人</span></button>
+      <button class="menu-row" data-action="toggleTranslations"><span class="menu-icon"><span class="translate-icon">A</span></span><span>翻译</span></button>
+      <button class="menu-row comment-row" id="comment-row" role="switch" aria-checked="true" data-action="toggleCommentMarkers"><span class="menu-icon"><span class="comment-icon">···</span></span><span class="menu-copy"><span>显示评论记号</span><span class="menu-subtitle">播放进度中显示评论记号</span></span><span class="toggle-switch on" id="comment-switch"><span></span></span></button>
+      <button class="menu-row" data-option="download"><span class="menu-icon"><span class="download-icon">↓</span></span><span>下载音频</span></button>
+      <button class="menu-row" data-option="stats"><span class="menu-icon"><span class="stats-icon">i</span></span><span>查看统计</span></button>
+      <button class="menu-row" data-option="report"><span class="menu-icon"><span class="report-icon">△<span>!</span></span></span><span>举报</span></button>
+    </div><button class="delete-option" data-option="delete">删除</button></div>
+  </section>
+</main>
+<script>window.module={exports:{}};</script><script src="../lib/captions.js"></script><script>window.captionModule=module.exports;window.module={exports:{}};</script><script src="../lib/demo.js"></script>
+<script>
+window.demoModule=module.exports;
+window.require=function(name){if(name==='../../lib/captions')return captionModule;if(name==='../../lib/demo')return demoModule;throw new Error('Unexpected preview import');};
+window.Page=function(definition){window.previewPage=Object.assign({},definition,{data:Object.assign({},definition.data),setData:function(patch){Object.assign(this.data,patch);render(this.data);}});};
+function text(id,value){document.getElementById(id).textContent=value;}
+function node(tag,className,value){var element=document.createElement(tag);if(className)element.className=className;if(value!==undefined)element.textContent=value;return element;}
+function render(data){
+  text('title',data.title);text('sheet-title',data.title);text('date',data.dateLabel);text('status',data.status);text('search-status',data.status);text('elapsed',data.elapsed);text('duration',data.duration);text('created-at',data.createdAt);text('speed',data.speed+'x');
+  document.getElementById('status-dot').classList.toggle('is-playing',data.running);
+  document.getElementById('seek').value=data.progress;document.getElementById('seek').style.setProperty('--progress',data.progress+'%');
+  document.getElementById('play').setAttribute('aria-label',data.running?'暂停示例':'播放字幕示例');document.getElementById('play-icon').className=data.running?'pause-icon':'play-icon';
+  document.querySelectorAll('[data-tab]').forEach(function(button){var selected=button.dataset.tab===data.activeTab;button.classList.toggle('selected',selected);button.setAttribute('aria-selected',String(selected));});
+  ['transcript','summary','chapters','speakers','info'].forEach(function(name){document.getElementById(name+'-panel').hidden=name!==data.activeTab;});
+  ['toolbar','record-header','tabs-scroll'].forEach(function(id){document.getElementById(id).hidden=data.searchOpen;});
+  document.getElementById('minutes-screen').classList.toggle('is-searching',data.searchOpen);
+  document.getElementById('search-header').hidden=!data.searchOpen;document.getElementById('search-input').value=data.searchQuery;document.getElementById('clear-query').hidden=!data.searchQuery;
+  document.getElementById('search-navigation').hidden=!(data.searchOpen&&data.searchQuery);text('search-count',(data.searchCount?data.searchIndex+1:0)+' / '+data.searchCount);
+  document.getElementById('previous-match').disabled=!data.searchCount;document.getElementById('next-match').disabled=!data.searchCount;
+  var notice=document.getElementById('notice');notice.hidden=!data.notice;notice.classList.toggle('over-sheet',data.optionsOpen||data.speedOpen);text('notice',data.notice);
+  document.getElementById('options').hidden=!data.optionsOpen;document.getElementById('speed-sheet').hidden=!data.speedOpen;document.getElementById('sheet-backdrop').hidden=!(data.speedOpen||data.optionsOpen);
+  document.getElementById('silence-switch').classList.toggle('on',data.skipSilence);document.getElementById('silence-row').setAttribute('aria-checked',String(data.skipSilence));
+  document.getElementById('comment-switch').classList.toggle('on',data.showCommentMarkers);document.getElementById('comment-row').setAttribute('aria-checked',String(data.showCommentMarkers));
+  document.querySelectorAll('[data-speed]').forEach(function(button){var selected=Number(button.dataset.speed)===data.speed;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));button.querySelector('.speed-label').textContent=button.classList.contains('major')||selected?button.dataset.speed+'x':'';});
+  var panel=document.getElementById('transcript-panel');panel.replaceChildren();
+  data.rows.forEach(function(row){
+    var item=node('article','utterance'),line=node('div','speaker-line'),avatar=node('span','speaker-avatar');avatar.append(node('span','person-icon'));line.append(avatar,node('span','',row.speaker),node('span','meta-bullet','·'),node('span','',row.time));
+    if(!row.final&&data.running)line.append(node('span','partial-label','正在输入'));
+    var body=node('div','utterance-text');row.sourceParts.forEach(function(part){var span=node('span',(part.match?'search-match':'')+(part.active?' active-match':''),part.text);if(part.id)span.id=part.id;body.append(span);});item.append(line,body);
+    if(data.showTranslations&&row.translation)item.append(node('div','translation-text',row.translation));panel.append(item);
+  });
+  if(data.scrollTarget){var target=document.getElementById(data.scrollTarget);if(target)target.scrollIntoView({block:'nearest'});}
+}
+</script><script src="../pages/index/demo-controller.js"></script>
+<script>
+previewPage.data.speedOptions.forEach(function(option){var button=node('button','speed-choice'+(option.major?' major':''));button.dataset.speed=option.value;button.setAttribute('aria-label',option.value+' 倍速');button.append(node('span','speed-tick'),node('span','speed-label'));button.addEventListener('click',function(){previewPage.selectSpeed(option.value);});document.getElementById('speed-scale').append(button);});
+previewPage.data.searchKeywords.forEach(function(keyword){var button=node('button','keyword-chip',keyword);button.addEventListener('click',function(){previewPage.updateSearch(keyword);});document.getElementById('search-keywords').append(button);});
+previewPage.onLoad();render(previewPage.data);
+document.querySelectorAll('[data-action]').forEach(function(button){button.addEventListener('click',function(){previewPage[button.dataset.action]();if(button.dataset.action==='toggleSearch'&&previewPage.data.searchOpen)document.getElementById('search-input').focus();});});
+document.querySelectorAll('[data-tab]').forEach(function(button){button.addEventListener('click',function(){previewPage.setTab(button.dataset.tab);});});
+document.querySelectorAll('[data-option]').forEach(function(button){button.addEventListener('click',function(){previewPage.localOption({currentTarget:{dataset:{option:button.dataset.option}}});});});
+document.getElementById('seek').addEventListener('input',function(event){previewPage.seek(Number(event.target.value));});
+document.getElementById('search-input').addEventListener('input',function(event){previewPage.updateSearch(event.target.value);});
+document.addEventListener('keydown',function(event){if(event.key==='Escape'){if(previewPage.data.speedOpen||previewPage.data.optionsOpen)previewPage.closeSheets();else if(previewPage.data.searchOpen)previewPage.clearSearch();}});
+document.addEventListener('visibilitychange',function(){if(document.hidden)previewPage.onHide();});window.addEventListener('pagehide',function(){previewPage.onUnload();});
+</script>
+</body>
+</html>

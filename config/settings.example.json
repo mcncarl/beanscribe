@@ -1,0 +1,15 @@
+{
+  "appId": "cli_REPLACE_ME",
+  "origin": "https://record.example.com",
+  "basePath": "/minutes",
+  "bind": "127.0.0.1",
+  "port": 8897,
+  "data": "data/recordings",
+  "accessTokenFile": "secrets/access-token",
+  "appSecretFile": "secrets/feishu-app-secret",
+  "identityConfig": "secrets/identity.json",
+  "documentsConfig": "secrets/documents.json",
+  "stepfunKeyFile": "secrets/stepfun-key",
+  "volcAppId": "",
+  "volcTokenFile": ""
+}
