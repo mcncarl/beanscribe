@@ -64,11 +64,13 @@ H5 指普通网页；JSAPI 是飞书向网页提供的原生能力接口。程�
 
 以下命令以 Debian/Ubuntu 为例，在**你自己的服务器**执行。目录统一为 `/opt/luyindou`：
 
+仓库已更名为 `beanscribe`。为兼容既有部署，Linux 用户、安装目录和 systemd 服务名继续使用 `luyindou`；仓库更名无需迁移录音数据。已有安装更新源码时，按[更新部署](DEVELOPMENT.md#更新部署)修改 Git 远端地址即可。
+
 ```sh
 sudo apt-get update
 sudo apt-get install -y git python3 python3-venv libopus0 caddy
 sudo useradd --system --user-group --home-dir /opt/luyindou --shell /usr/sbin/nologin luyindou
-sudo git clone https://github.com/mcncarl/luyindou.git /opt/luyindou
+sudo git clone https://github.com/mcncarl/beanscribe.git /opt/luyindou
 cd /opt/luyindou
 sudo python3 -m venv .venv
 sudo .venv/bin/python -m pip install -r server/requirements.txt

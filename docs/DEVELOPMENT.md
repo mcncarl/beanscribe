@@ -71,7 +71,10 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 先停止新录音、等待任务完成，在服务器备份 `data/`、`secrets/` 和 `config/settings.json` 到私有位置。确认工作树无需要保留的源码改动后，更新同一仓库：
 
+仓库当前名称为 `mcncarl/beanscribe`；以下第一条命令把已有安装的远端地址更新为新名称。安装目录、Linux 用户、服务名和数据位置继续沿用 `luyindou`。
+
 ```sh
+sudo git -C /opt/luyindou remote set-url origin https://github.com/mcncarl/beanscribe.git
 sudo git -C /opt/luyindou pull --ff-only
 sudo /opt/luyindou/.venv/bin/python -m pip install -r /opt/luyindou/server/requirements.txt
 sudo -u luyindou /opt/luyindou/.venv/bin/python /opt/luyindou/tools/run.py --check

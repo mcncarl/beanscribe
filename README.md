@@ -1,4 +1,4 @@
-# 录音豆 · luyindou
+# 豆记 · BeanScribe
 
 把 Soundcore D3200 录音豆接入自己的飞书网页应用：在飞书底部点开「录音豆」，连接设备、看实时字幕，录后播放、搜索、编辑、导出，并生成私人飞书文档。
 
@@ -58,8 +58,8 @@ flowchart LR
 需要 Node.js 18+、Python 3.11+ 和 libopus。下列自动测试使用合成音频与本地模拟服务，不需要真实密钥：
 
 ```sh
-git clone https://github.com/mcncarl/luyindou.git
-cd luyindou
+git clone https://github.com/mcncarl/beanscribe.git
+cd beanscribe
 python3 -m venv .venv
 .venv/bin/python -m pip install -r server/requirements.txt
 npm test
@@ -71,7 +71,7 @@ Ubuntu/Debian 可通过 `sudo apt-get install libopus0` 安装解码库，macOS 
 
 ## 使用许可与商业授权
 
-本项目原创内容采用自定义的[录音豆个人非商业使用许可证 1.0](LICENSE)：
+本项目原创内容采用自定义的[豆记个人非商业使用许可证 1.0](LICENSE)：
 
 - **免费范围**：个人学习、研究、测试、自行部署及个人日常非商业使用；可在保留许可证、版权声明并标注修改的条件下，为非商业学习交流免费分享。
 - **须另行授权**：企业内部业务使用、商业产品集成、托管/SaaS/API、收费代部署、定制交付、商业转售，以及为雇主或客户开展业务。修改代码或不直接收费，不会自动免除授权要求。
